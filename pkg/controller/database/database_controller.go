@@ -17,7 +17,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	examplev1 "github.com/fanzhangio/demo-extending-k8s/pkg/apis/example/v1"
@@ -27,11 +26,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -67,7 +65,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileDatabase{Client: mgr.GetClient(), scheme: mgr.GetScheme(), recorder: mgr.GetRecorder("database-controller")}
+	return &ReconcileDatabase{Client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -84,6 +82,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// TODO(user): Modify this to be the types you create
+	// Uncomment watch a Deployment created by Database - change this for objects you create
+	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &examplev1.Database{},
+	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -92,8 +99,7 @@ var _ reconcile.Reconciler = &ReconcileDatabase{}
 // ReconcileDatabase reconciles a Database object
 type ReconcileDatabase struct {
 	client.Client
-	scheme   *runtime.Scheme
-	recorder record.EventRecorder
+	scheme *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a Database object and makes changes based on the state read
@@ -112,23 +118,35 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		if errors.IsNotFound(err) {
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
+			log.Printf("Could not find Database %v.\n", request)
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		log.Printf("Could not fetch Database %v for %+v\n", err, request)
 		return reconcile.Result{}, err
 	}
 
 	deploymentName := instance.Spec.User
+	if deploymentName == "" {
+		log.Printf("Waiting for Database (%s) to be updated", request.NamespacedName)
+		return reconcile.Result{}, nil
+	}
 
 	log.Printf("Fetching Database: %#v\n", instance)
 
 	// TODO(user): Change this for the object type created by your controller
 	// Check if the Deployment already exists
+	deploy, err := newDeployment(instance, r.scheme)
+	if err != nil {
+		log.Printf("Error creating new deployment for Database (%v), %v\n", request, err)
+	}
+
 	found := &appsv1.Deployment{}
-	err = r.Get(context.TODO(), types.NamespacedName{Name: deploymentName, Namespace: instance.Namespace}, found)
+	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		log.Printf("Creating Deployment %s/%s\n", instance.Namespace, deploymentName)
-		err = r.Create(context.TODO(), instance)
+
+		err = r.Create(context.TODO(), deploy)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -136,43 +154,31 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
-	if !metav1.IsControlledBy(found, instance) {
-		msg := fmt.Sprintf(MessageResourceExists, found.Name)
-		r.recorder.Eventf(found, corev1.EventTypeWarning, ErrResourceExists, msg)
-		return reconcile.Result{}, fmt.Errorf(msg)
-	}
-
-	if instance.Spec.Replicas != nil && *instance.Spec.Replicas != *found.Spec.Replicas {
-		log.Printf("Database %s replicas: %d, deployment replicas: %d\n", instance.Name, *instance.Spec.Replicas, *found.Spec.Replicas)
-		err = r.Update(context.TODO(), newDeployment(instance))
+	if found.Spec.Replicas != nil && *instance.Spec.Replicas != *found.Spec.Replicas {
+		if err != nil {
+			log.Printf("Error creating new deployment for Database (%v), %v\n", request, err)
+		}
+		err = r.Update(context.TODO(), deploy)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 	}
 
-	r.recorder.Eventf(instance, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
 	return reconcile.Result{}, nil
 }
 
 // newDeployment creates a new Deployment for a Database resource. It also sets
 // the appropriate OwnerReferences on the resource so handleObject can discover
 // the Database resource that 'owns' it.
-func newDeployment(database *examplev1.Database) *appsv1.Deployment {
+func newDeployment(database *examplev1.Database, scheme *runtime.Scheme) (*appsv1.Deployment, error) {
 	labels := map[string]string{
 		"app":        "mysql",
 		"controller": database.Name,
 	}
-	return &appsv1.Deployment{
+	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      database.Spec.User,
 			Namespace: database.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(database, schema.GroupVersionKind{
-					Group:   examplev1.SchemeGroupVersion.Group,
-					Version: examplev1.SchemeGroupVersion.Version,
-					Kind:    "Database",
-				}),
-			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: database.Spec.Replicas,
@@ -200,4 +206,7 @@ func newDeployment(database *examplev1.Database) *appsv1.Deployment {
 			},
 		},
 	}
+	err := controllerutil.SetControllerReference(database, deploy, scheme)
+
+	return deploy, err
 }

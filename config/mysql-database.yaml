@@ -1,0 +1,9 @@
+apiVersion: example.demo.k8s.io/v1
+kind: Database
+metadata:
+  name: mysql
+spec:
+  user: my-user
+  password: secret
+  replicas: 3
+  encoding: unicode

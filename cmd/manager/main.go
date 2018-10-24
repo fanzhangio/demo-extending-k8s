@@ -20,6 +20,7 @@ import (
 
 	"github.com/fanzhangio/demo-extending-k8s/pkg/apis"
 	"github.com/fanzhangio/demo-extending-k8s/pkg/controller"
+	"github.com/fanzhangio/demo-extending-k8s/pkg/controller/database"
 	"github.com/fanzhangio/demo-extending-k8s/pkg/webhook"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -73,6 +74,10 @@ func main() {
 
 	// Start the Cmd
 	log.Info("Starting the Cmd.")
+	if err := database.Add(mgr); err != nil {
+		log.Error(err, "unable to Add a new Database Controller and adds it to the Manager")
+		os.Exit(1)
+	}
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		log.Error(err, "unable to run the manager")
 		os.Exit(1)
