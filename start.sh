@@ -15,7 +15,8 @@ function header_text {
   echo "$header$*$reset"
 }
 
-header_text "=====> Starting Demo"
+header_text "       Starting Demo. Project is from Repo : github.com/fanzhangio/demo-extending-k8s"
+header_text "=====> [ Run Make to build, test, generate manifests from project ]"
 
 make
 
@@ -27,6 +28,10 @@ kubectl get crd
 
 header_text "=====>[ Create mysql object ] "
 kubectl apply -f config/mysql-database.yaml
+
+header_text "=====>[ Deployment does not work without controller running ] "
+echo "kubectl get deployment"
+kubectl get deployment
 
 header_text "=====>[ Run Controller locally ] "
 make run
