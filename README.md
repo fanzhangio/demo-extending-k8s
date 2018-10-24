@@ -20,9 +20,9 @@ CRD needs to be installed into kubernetes cluster for fully functionanlity. You 
 
 ### Get this project
 - Clone this project
-  `mkdir -p $GOPATH/src/github.com/fanzhangio/`
-  `cd $GOPATH/src/github.com/fanzhangio/`
-  `git clone https://github.com/fanzhangio/demo-extending-k8s.git`
+  - `mkdir -p $GOPATH/src/github.com/fanzhangio/`
+  - `cd $GOPATH/src/github.com/fanzhangio/`
+  - `git clone https://github.com/fanzhangio/demo-extending-k8s.git`
 
 ## Demo
 
