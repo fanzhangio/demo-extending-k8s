@@ -1,0 +1,3 @@
+version: "1"
+domain: demo.k8s.io
+repo: workspace/demo
