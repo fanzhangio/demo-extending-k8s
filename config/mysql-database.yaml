@@ -3,7 +3,7 @@ kind: Database
 metadata:
   name: mysql
 spec:
-  user: my-user
+  user: demo-mysql
   password: secret
-  replicas: 3
+  replicas: 2
   encoding: unicode

@@ -132,7 +132,7 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, nil
 	}
 
-	log.Printf("Fetching Database: %#v\n", instance)
+	log.Printf("Fetching Database %s, reconciling actual status with desired status\n", deploymentName)
 
 	// TODO(user): Change this for the object type created by your controller
 	// Check if the Deployment already exists
