@@ -28,7 +28,7 @@ github.com/fanzhangio/demo-extending-k8s/pkg/controller/database/database_contro
 github.com/fanzhangio/demo-extending-k8s/pkg/controller/database/database_controller.go:158.17,160.4 1 0
 github.com/fanzhangio/demo-extending-k8s/pkg/controller/database/database_controller.go:162.17,164.4 1 0
 github.com/fanzhangio/demo-extending-k8s/pkg/controller/database/database_controller.go:173.102,212.2 4 0
-github.com/fanzhangio/demo-extending-k8s/pkg/apis/example/v1/database_types.go:64.13,66.2 1 1
+github.com/fanzhangio/demo-extending-k8s/pkg/apis/example/v1/database_types.go:70.13,72.2 1 1
 github.com/fanzhangio/demo-extending-k8s/pkg/apis/example/v1/register.go:43.53,45.2 1 0
 github.com/fanzhangio/demo-extending-k8s/pkg/apis/example/v1/zz_generated.deepcopy.go:26.49,33.2 6 1
 github.com/fanzhangio/demo-extending-k8s/pkg/apis/example/v1/zz_generated.deepcopy.go:36.42,37.15 1 1

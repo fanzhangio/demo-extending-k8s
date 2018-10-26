@@ -4,6 +4,6 @@ metadata:
   name: mysql
 spec:
   user: demo-mysql
-  password: secret
-  replicas: 2
+  password: secretpassword
+  replicas: 3
   encoding: unicode

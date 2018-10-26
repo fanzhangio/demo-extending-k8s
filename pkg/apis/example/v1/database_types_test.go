@@ -30,12 +30,13 @@ func TestStorageDatabase(t *testing.T) {
 		Namespace: "default",
 	}
 	replica := int32(0)
+	password := "secretpassword"
 	created := &Database{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "default",
 		},
-		Spec: DatabaseSpec{Replicas: &replica},
+		Spec: DatabaseSpec{Password: password, Replicas: &replica},
 	}
 	g := gomega.NewGomegaWithT(t)
 

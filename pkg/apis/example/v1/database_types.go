@@ -26,8 +26,14 @@ import (
 type DatabaseSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	User     string `json:"user"`
+
+	User string `json:"user"`
+
+	// +kubebuilder:validation:MaxLength=20
+	// +kubebuilder:validation:MinLength=8
 	Password string `json:"password"`
+
+	// +kubebuilder:validation:Enum=unicode,uft-8,ascii
 	Encoding string `json:"encoding,omitempty"`
 	Replicas *int32 `json:"replicas"`
 }
