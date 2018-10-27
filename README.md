@@ -25,7 +25,23 @@ CRD needs to be installed into kubernetes cluster for fully functionanlity. You 
   - `git clone https://github.com/fanzhangio/demo-extending-k8s.git`
 
 ## Demo
-
+1. Start from project directory
+   ```bash
+   $ cd $GOPATH/src/github.com/fanzhangio/demo-extending-k8s
+   ```
+2. Start minikube cluster
+   ```bash
+   $ minikube start
+   $ minikube get node
+   ```
+3. Run start scripts to starting demo
+   ```bash
+   $ ./start.sh
+   ```
+   Open another termnial to run `kubectl` see results
+   ```bash
+   $ kubectl get deployment
+   ```
 
 ## Reference Resource
 - [Kubebuilder Gitbook](http://book.kubebuilder.io)
